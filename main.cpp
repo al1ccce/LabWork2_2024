@@ -14,8 +14,15 @@ int main() {
         case 1: 
             task1();
             break;
-        case 3:
-            task3();
+        case 4:
+            task4();
+            break;
+        case 5:
+            task5();
+            break;
+        case 6:
+            task6();
+            break;
         default:
             cout << "incorrect task\n";
             break;
