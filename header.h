@@ -3,6 +3,7 @@
 #include <stdexcept>
 #include <fstream>
 #include <string>
+#include <sstream>
 
 using namespace std;
 
@@ -270,6 +271,10 @@ struct Stack {
             throw runtime_error("Stack is empty");
         }
         return head->val;
+    }
+
+    bool isEmpty() {
+        return head == nullptr;
     }
 };
 
