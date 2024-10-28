@@ -46,7 +46,7 @@ int chooseOp(char op, int a, int b) {
 }
 
 void task1(){
-    string str = "(1 & 0) | (1 ^ 0)";
+    string str = "!(1 & !1)";
     cout << str << endl;
     string polsky = "";
     Stack<char> ops;
