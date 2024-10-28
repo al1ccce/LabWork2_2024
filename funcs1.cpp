@@ -1,92 +1,97 @@
 #include "header.h"
 
-int prior(char c) {
-    switch (c) {
-        case ')': return 777;
-        case '^': case '|': return 4;
-        case '&': return 3;
-        case '!': return 2;
-        case '(': return 1;
-    }
-    return 10;
+
+int prior(char op) {
+    if (op == '!') return 3; // highest
+    if (op == '&') return 2;
+    if (op == '|') return 1;
+    if (op == '^') return 2; // XOR
+    return 0;
 }
 
-void whileNotSkobka(Stack<char>& ops, string& polsky) {
-    while (ops.head != nullptr && ops.get() != '(') {
-        polsky += ops.get();
-        ops.pop();
+void toPolsky(const string& infix, string& polsky) {
+    Stack<char> opStack;
+    stringstream ss(infix);
+    string element;
+
+    while (ss >> element) {
+        if (element == "0" || element == "1") { // operands
+            polsky += element + " ";
+        } else if (element[0] == '(') {
+            opStack.push(element[0]);
+        } else if (element[0] == ')') {
+            while (!opStack.isEmpty() && opStack.get() != '(') {
+                polsky += opStack.get();
+                polsky += " "; 
+                opStack.pop();
+            }
+            opStack.pop(); // pop '('
+        } else { // операторы
+            while (!opStack.isEmpty() && prior(opStack.get()) >= prior(element[0])) {
+                polsky += opStack.get();
+                polsky += " ";
+                opStack.pop();
+            }
+            opStack.push(element[0]);
+        }
     }
-    if (ops.head != nullptr) {
-        ops.pop(); // Удаляем открывающую скобку
+
+    while (!opStack.isEmpty()) {
+        polsky += opStack.get();
+        polsky += " "; 
+        opStack.pop();
     }
 }
 
-void isHigher(Stack<char>& ops, int sw, char c, string& polsky) {
-    while (ops.head != nullptr && prior(ops.get()) >= sw) {
-        polsky += ops.get();
-        ops.pop();
-    }
-    ops.push(c);
-}
-
-void createPolsky(string& polsky, Stack<char>& ops) {
-    while (ops.head != nullptr) {
-        polsky += ops.get();
-        ops.pop();
-    }
-}
-
-int chooseOp(char op, int a, int b) {
+bool chooseOp(char op, bool a, bool b) {
     switch (op) {
-        case '&': return a & b;
-        case '|': return a | b;
-        case '^': return a ^ b;
+        case '&': return a && b; // AND
+        case '|': return a || b; // OR
+        case '^': return a ^ b;   // XOR
         default: throw runtime_error("Unknown operator");
     }
 }
 
-void task1(){
-    string str = "!(1 & !1)";
-    cout << str << endl;
-    string polsky = "";
-    Stack<char> ops;
-    for (int i = 0; i < str.size(); i++) {
-        if (str[i] == ' ') continue;
-        int sw = prior(str[i]);
-        if (sw == 10) {
-            polsky += str[i];
-        } else if (sw == 1) {
-            ops.push(str[i]);
-        } else if (sw == 777) {
-            whileNotSkobka(ops, polsky);
+bool solvePolsky(const string& polsky) {
+    Stack<bool> valueStack;
+    stringstream ss(polsky);
+    string element;
+
+    while (ss >> element) {
+        if (element == "0") {
+            valueStack.push(false);
+        } else if (element == "1") {
+            valueStack.push(true);
         } else {
-            isHigher(ops, sw, str[i], polsky);
+            bool right = valueStack.get(); 
+            valueStack.pop();
+            bool result;
+
+            if (element == "!") {
+                result = !right; 
+                valueStack.push(result);
+            } else {
+                bool left = valueStack.get(); 
+                valueStack.pop();
+                result = chooseOp(element[0], left, right); // Теперь используем chooseOp
+                valueStack.push(result);
+            }
         }
     }
-    createPolsky(polsky, ops);
+    return valueStack.get(); // возвращаем окончательный результат
+}
+
+void task1() {
+    string infix = "( 1 ^ 0 ) & ( 0 | 1 )";
+    string polsky;
+    cout << infix << endl;
+
+    toPolsky(infix, polsky);
     cout << polsky << endl;
 
-    Stack<int> opers;
-    for (int i = 0; i < polsky.size(); i++) {
-        if (polsky[i] == '0' || polsky[i] == '1') {
-            int num = static_cast<int>(polsky[i] - '0');
-            opers.push(num);
-        } else if (polsky[i] == '!') {
-            int froms = opers.get();
-            opers.pop();
-            froms = !froms;
-            opers.push(froms);
-        } else {
-            int froms1 = opers.get();
-            opers.pop();
-            int froms2 = opers.get();
-            opers.pop();
-            int res = chooseOp(polsky[i], froms2, froms1);
-            opers.push(res);
-        }
-    }
+    bool result = solvePolsky(polsky);
+    cout << result << endl;
 
-    cout << opers.get() << endl;
 }
 
 void task4(){
@@ -101,9 +106,9 @@ void task4(){
         syms.push_back(static_cast<char>(i));
     }
     syms.push_back(static_cast<char>(64));
-    string templ = "*?stud.nstu.??";
+    string templ = "*.el?o";
     cout << templ << endl;
-    string da = "meow@stud.nstu.co";
+    string da = "HHHhhh.ello";
     cout << da << endl;
     int i = 0, j = 0;
     while (i < da.size() && j < templ.size()) {
